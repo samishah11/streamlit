@@ -2,49 +2,46 @@ import streamlit as st
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn import datasets
 
-# Load the Titanic dataset
-# df=sns.load_dataset("titanic")
-data_url = "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
-df = pd.read_csv(data_url)
+# Load the Iris dataset
+iris = datasets.load_iris()
+df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
+df['species'] = iris.target
+df['species'] = df['species'].map({0: 'setosa', 1: 'versicolor', 2: 'virginica'})
 
-
-# Title of the app
-st.title("My_first_app_on_Titanic")
-
-# Sidebar filters
-st.sidebar.header("Filter Options")
-selected_class = st.sidebar.selectbox("Select Passenger Class", ["All"] + sorted(df['Pclass'].unique().tolist()))
-selected_gender = st.sidebar.selectbox("Select Gender", ["All"] + sorted(df['Sex'].unique().tolist()))
-
-# Apply filters
-filtered_df = df.copy()
-if selected_class != "All":
-    filtered_df = filtered_df[filtered_df['Pclass'] == selected_class]
-if selected_gender != "All":
-    filtered_df = filtered_df[filtered_df['Sex'] == selected_gender]
+# Streamlit UI
+st.title("Iris_dataset")
+st.write("This app allows you to explore the famous Iris dataset and made by SHAHBAZ.")
 
 # Display dataset
-st.write("### Filtered Data Preview")
-st.dataframe(filtered_df.head())
+if st.checkbox("Show raw data"):
+    st.dataframe(df)
 
-# Display summary statistics
-st.write("### Summary Statistics")
-st.write(filtered_df.describe())
+# Select visualization
+st.sidebar.header("Visualization Options")
+plot_type = st.sidebar.selectbox("Choose a plot type", ["Histogram", "Scatter Plot", "Box Plot"])
 
-# Data Visualization
-st.write("### Survival Count by Class")
-fig, ax = plt.subplots()
-sns.countplot(data=filtered_df, x='Pclass', hue='Survived', ax=ax)
-ax.set_xlabel("Passenger Class")
-ax.set_ylabel("Count")
-st.pyplot(fig)
+# Histogram
+if plot_type == "Histogram":
+    feature = st.sidebar.selectbox("Select feature", df.columns[:-1])
+    fig, ax = plt.subplots()
+    sns.histplot(df, x=feature, hue="species", kde=True, ax=ax)
+    st.pyplot(fig)
 
-st.write("### Age Distribution")
-fig, ax = plt.subplots()
-sns.histplot(filtered_df['Age'].dropna(), kde=True, bins=20, ax=ax)
-ax.set_xlabel("Age")
-ax.set_ylabel("Count")
-st.pyplot(fig)
+# Scatter Plot
+elif plot_type == "Scatter Plot":
+    x_feature = st.sidebar.selectbox("X-axis", df.columns[:-1])
+    y_feature = st.sidebar.selectbox("Y-axis", df.columns[:-1])
+    fig, ax = plt.subplots()
+    sns.scatterplot(data=df, x=x_feature, y=y_feature, hue="species", ax=ax)
+    st.pyplot(fig)
 
-# Run the app with `streamlit run script.py`
+# Box Plot
+elif plot_type == "Box Plot":
+    feature = st.sidebar.selectbox("Select feature", df.columns[:-1])
+    fig, ax = plt.subplots()
+    sns.boxplot(data=df, x="species", y=feature, ax=ax)
+    st.pyplot(fig)
+
+# Run the app using: streamlit run filename.py
